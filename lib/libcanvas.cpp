@@ -57,6 +57,9 @@ class CanvasContext {
   // bresenham 实现
   void bresenham(const Vec2i& start, const Vec2i& end);
 
+  // 三角形填充
+  void mytriangle(const Vec2i& a, const Vec2i& b, const Vec2i& c);
+
  public:
   CanvasContext(Canvas* canvas);
   CanvasContext& setColor(const TGAColor* color);
@@ -64,6 +67,8 @@ class CanvasContext {
   CanvasContext& point(const Vec2i& point);
   CanvasContext& line(const Vec2i& start, const Vec2i& end);
   CanvasContext& triangle(const Vec2i& a, const Vec2i& b, const Vec2i& c);
+  CanvasContext& flipH();
+  CanvasContext& flipV();
 };
 
 const TGAColor* Canvas::COLOR_RED = new TGAColor(255, 0, 0, 255);
@@ -205,6 +210,40 @@ void CanvasContext::bresenham(const Vec2i& start, const Vec2i& end) {
   }
 }
 
+void CanvasContext::mytriangle(const Vec2i& a, const Vec2i& b, const Vec2i& c) {
+  Vec2i* vertex[3] = {const_cast<Vec2i*>(&a), const_cast<Vec2i*>(&b),
+                      const_cast<Vec2i*>(&c)};
+  std::sort(vertex, vertex + 3, [](Vec2i* a, Vec2i* b) { return a->y < b->y; });
+  int h1 = vertex[1]->y - vertex[0]->y;
+  int h2 = vertex[2]->y - vertex[0]->y;
+  int h3 = vertex[2]->y - vertex[1]->y;
+  for (int y = vertex[0]->y;
+       y < /* == vertex[1] 时会在一端得到 x 坐标 0, 下同 */ vertex[1]->y; ++y) {
+    int h = y - vertex[0]->y;
+    int startx = vertex[0]->x + (vertex[2]->x - vertex[0]->x) * (h / (float)h2);
+    int endx = vertex[0]->x + (vertex[1]->x - vertex[0]->x) * (h / (float)h1);
+    if (startx > endx) {
+      std::swap(startx, endx);
+    }
+    for (int x = startx; x <= endx; ++x) {
+      this->point({x, y});
+    }
+  }
+
+  for (int y = vertex[1]->y; y < vertex[2]->y; ++y) {
+    int startx = vertex[0]->x + (vertex[2]->x - vertex[0]->x) *
+                                    ((float)(y - vertex[0]->y) / h2);
+    int endx = vertex[1]->x +
+               (vertex[2]->x - vertex[1]->x) * ((float)(y - vertex[1]->y) / h3);
+    if (startx > endx) {
+      std::swap(startx, endx);
+    }
+    for (int x = startx; x <= endx; ++x) {
+      this->point({x, y});
+    }
+  }
+}
+
 CanvasContext::CanvasContext(Canvas* canvas) {
   this->color = new TGAColor(255, 255, 255, 255);
   this->canvas = canvas;
@@ -228,5 +267,17 @@ CanvasContext& CanvasContext::line(const Vec2i& start, const Vec2i& end) {
 CanvasContext& CanvasContext::triangle(const Vec2i& a,
                                        const Vec2i& b,
                                        const Vec2i& c) {
-  return this->line(a, b).line(b, c).line(c, a);
+  this->mytriangle(a, b, c);
+  // this->line(a, b).line(b, c).line(c, a);
+  return *this;
+}
+
+CanvasContext& CanvasContext::flipH() {
+  this->canvas->image->flip_horizontally();
+  return *this;
+}
+
+CanvasContext& CanvasContext::flipV() {
+  this->canvas->image->flip_vertically();
+  return *this;
 }

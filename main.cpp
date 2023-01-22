@@ -14,31 +14,33 @@ int main(int argc, char** argv) {
   } else {
     model = new Model("obj/african_head.obj");
   }
-  int w = 4000, h = 4000;
+
+  int w = 800, h = 800;
   Canvas* canvas = new Canvas(w, h);
   CanvasContext* ctx = canvas->createContext();
-  std::vector<const TGAColor*> colors = {
-      Canvas::COLOR_RED,    Canvas::COLOR_WHITE,  Canvas::COLOR_GREEN,
-      Canvas::COLOR_BLUE,   Canvas::COLOR_YELLOW, Canvas::COLOR_PURPLE,
-      Canvas::COLOR_ORANGE, Canvas::COLOR_CYAN,   Canvas::COLOR_GRAY};
 
-  for (int i = 0; i < model->nfaces(); i++) {
+  for (int i = 0; i < model->nfaces(); ++i) {
     std::vector<int> face = model->face(i);
-    Vec3f v0 = ((model->vert(face[0]) + (Vec3f){1., 1., 1.}));
-    Vec3f v1 = ((model->vert(face[1]) + (Vec3f){1., 1., 1.}));
-    Vec3f v2 = ((model->vert(face[2]) + (Vec3f){1., 1., 1.}));
+    Vec3f v0 = model->vert(face[0]);
+    Vec3f v1 = model->vert(face[1]);
+    Vec3f v2 = model->vert(face[2]);
+    float light = ((v2 - v0) ^ (v1 - v0)).normalize() * (Vec3f){0, 0, -1.};
 
-    ctx->setColor(colors[i % colors.size()]);
-    for (int j = 0; j < 3; j++) {
-      ctx->triangle({static_cast<int>(v0.x * w / 2.),
-                     static_cast<int>(w - v0.y * h / 2.)},
-                    {static_cast<int>(v1.x * w / 2.),
-                     static_cast<int>(w - v1.y * h / 2.)},
-                    {static_cast<int>(v2.x * w / 2.),
-                     static_cast<int>(w - v2.y * h / 2.)});
-    }
+    if (light < 0)
+      continue;
+
+    ctx->setColor(new TGAColor(255 * light, 150 * light * 0.3,
+                               150 * light * 0.3, 255 * light));
+    v0 = v0 + (Vec3f){1., 1., 1.};
+    v1 = v1 + (Vec3f){1., 1., 1.};
+    v2 = v2 + (Vec3f){1., 1., 1.};
+    ctx->triangle(
+        {static_cast<int>(v0.x * w / 2.), static_cast<int>(v0.y * h / 2.)},
+        {static_cast<int>(v1.x * w / 2.), static_cast<int>(v1.y * h / 2.)},
+        {static_cast<int>(v2.x * w / 2.), static_cast<int>(v2.y * h / 2.)});
   }
 
+  ctx->flipV();
   canvas->save("./output.tga");
   return 0;
 }
