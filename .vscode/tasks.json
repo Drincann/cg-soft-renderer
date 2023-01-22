@@ -6,7 +6,7 @@
     {
       "label": "build",
       "type": "shell",
-      "command": "fish ${workspaceFolder}/build.fish",
+      "command": "fish ${workspaceFolder}/tools/build.fish",
     }
   ]
 }
