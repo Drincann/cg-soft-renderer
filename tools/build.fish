@@ -2,7 +2,8 @@
 # ./build.fish 
 # -o /path/to/output 
 # -s /path/to/source
-# --open [/path/to/open] # auto open output.tga or arg path
+# --open [/path/to/open] # auto run and open output.tga or arg path
+# -r # auto run
 set out (pwd)/build/main
 set src (pwd)/main.cpp
 
@@ -34,8 +35,9 @@ while test $i -le (count $argv)
         else
             set open_path (pwd)/$argv[(math $i + 1)]
         end
+    else if test $argv[$i] = "-r"
+        set run 1
     end
-
     set i (math $i + 1)
 end
 
@@ -43,7 +45,12 @@ mkdir -p (dirname $out)
 
 g++ --std=c++11 -g -o $out $src -lm
 
-if test $open = 1
+if test "$run" = 1
+    # run
+    $out
+end
+
+if test "$open" = 1
     # run and open
     $out
     if test -z $open_path
