@@ -164,8 +164,6 @@ void CanvasContext::notwork(const Vec2i& start, const Vec2i& end) {
     float t = (x - x0) / (float)(x1 - x0);
     int y = y0 * (1. - t) + y1 * t;  // what is wrong here and how it works?
     // int y = y0 + t * (y1 - y0);  // this works fine
-    // y0 + y1*t -
-    // y0  -  y0*t + y1*t
 
     if (steep) {
       this->point(Vec2i(y, x));
